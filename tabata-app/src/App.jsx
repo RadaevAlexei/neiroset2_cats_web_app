@@ -1,6 +1,23 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import './index.css'
 
+const FullscreenIcon = ({ isFullscreen }) => {
+  if (isFullscreen) {
+    // Exit fullscreen icon
+    return (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+      </svg>
+    );
+  }
+  // Enter fullscreen icon
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    </svg>
+  );
+};
+
 function App() {
   const [workTime, setWorkTime] = useState(30);
   const [restTime, setRestTime] = useState(10);
@@ -16,6 +33,7 @@ function App() {
   const [isActive, setIsActive] = useState(false);
   const [isResting, setIsResting] = useState(false);
   const [isRoundResting, setIsRoundResting] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const maxRounds = 8;
   const audioContextRef = useRef(null);
@@ -118,6 +136,12 @@ function App() {
     }
   }, [time, isActive, rounds, currentRound, currentExercise, isResting, isRoundResting, playSound, workTime, restTime, roundRestTime]);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   const handleRoundChange = (index, value) => {
     const newRounds = [...rounds];
     newRounds[index].exercises = value.split(',').map(e => e.trim());
@@ -167,84 +191,104 @@ function App() {
     setIsActive(!isActive);
   }
 
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        alert(`Не удалось включить полноэкранный режим: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  }, []);
+
   const currentExerciseName = isRoundResting ? "Отдых между раундами" : (rounds[currentRound]?.exercises[currentExercise] || "Готово");
 
   return (
     <div className="app">
-      <header>
-        <h1>Табата Таймер</h1>
-      </header>
-      <main>
-        <div className="timer-display">
-          <h2>Раунд: {currentRound + 1} / {rounds.length}</h2>
-          <h3>Упражнение: {currentExerciseName}</h3>
-          <div className="main-timer">{time}с</div>
-          <p className={isResting || isRoundResting ? 'resting' : ''}>
-            {isResting ? "ОТДЫХ" : isRoundResting ? "МЕЖРАУНДОВЫЙ ОТДЫХ" : "РАБОТА"}
-          </p>
-        </div>
-
-        <div className="controls">
-          <button onClick={toggleTimer}>
-            {isActive ? 'Пауза' : 'Старт'}
-          </button>
-          <button onClick={resetTimer}>
-            Сброс
-          </button>
-        </div>
-
-        <div className="settings">
-          <h2>Настройки</h2>
-          <div className="global-settings">
-            <div className="form-group-inline">
-              <div className="form-group">
-                <label>Работа (сек):</label>
-                <input
-                  type="number"
-                  value={workTime}
-                  onChange={(e) => setWorkTime(parseInt(e.target.value, 10) || 0)}
-                  disabled={isActive}
-                />
-              </div>
-              <div className="form-group">
-                <label>Отдых (сек):</label>
-                <input
-                  type="number"
-                  value={restTime}
-                  onChange={(e) => setRestTime(parseInt(e.target.value, 10) || 0)}
-                  disabled={isActive}
-                />
-              </div>
-              <div className="form-group">
-                <label>Отдых между раундами (сек):</label>
-                <input
-                  type="number"
-                  value={roundRestTime}
-                  onChange={(e) => setRoundRestTime(parseInt(e.target.value, 10) || 0)}
-                  disabled={isActive}
-                />
-              </div>
-            </div>
+      <button onClick={toggleFullscreen} className="fullscreen-btn" title="Полноэкранный режим">
+        <FullscreenIcon isFullscreen={isFullscreen} />
+      </button>
+      
+      <div className="timer-section">
+        <header>
+          <h1>Табата Таймер</h1>
+        </header>
+        <main className="timer-main">
+          <div className="timer-display">
+            <h2>Раунд: {currentRound + 1} / {rounds.length}</h2>
+            <h3>Упражнение: {currentExerciseName}</h3>
+            <div className="main-timer">{time}с</div>
+            <p className={isResting || isRoundResting ? 'resting' : ''}>
+              {isResting ? "ОТДЫХ" : isRoundResting ? "МЕЖРАУНДОВЫЙ ОТДЫХ" : "РАБОТА"}
+            </p>
           </div>
 
-          {rounds.map((round, index) => (
-            <div key={index} className="round-settings">
-              <h4>Раунд {index + 1}</h4>
-              <button className="remove-round-btn" onClick={() => removeRound(index)} disabled={isActive || rounds.length <= 1}>&times;</button>
-              <div className="form-group">
-                <label>Упражнения (через запятую):</label>
-                <input
-                  type="text"
-                  value={round.exercises.join(', ')}
-                  onChange={(e) => handleRoundChange(index, e.target.value)}
-                  disabled={isActive}
-                />
+          <div className="controls">
+            <button onClick={toggleTimer}>
+              {isActive ? 'Пауза' : 'Старт'}
+            </button>
+            <button onClick={resetTimer}>
+              Сброс
+            </button>
+          </div>
+        </main>
+      </div>
+
+      <div className="settings-section">
+        <div className="settings">
+            <h2>Настройки</h2>
+            <div className="global-settings">
+              <div className="form-group-inline">
+                <div className="form-group">
+                  <label>Работа (сек):</label>
+                  <input
+                    type="number"
+                    value={workTime}
+                    onChange={(e) => setWorkTime(parseInt(e.target.value, 10) || 0)}
+                    disabled={isActive}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Отдых (сек):</label>
+                  <input
+                    type="number"
+                    value={restTime}
+                    onChange={(e) => setRestTime(parseInt(e.target.value, 10) || 0)}
+                    disabled={isActive}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Отдых между раундами (сек):</label>
+                  <input
+                    type="number"
+                    value={roundRestTime}
+                    onChange={(e) => setRoundRestTime(parseInt(e.target.value, 10) || 0)}
+                    disabled={isActive}
+                  />
+                </div>
               </div>
             </div>
-          ))}
-          <button onClick={addRound} disabled={isActive || rounds.length >= maxRounds}>Добавить раунд</button>
-        </div>
-      </main>
+
+            {rounds.map((round, index) => (
+              <div key={index} className="round-settings">
+                <h4>Раунд {index + 1}</h4>
+                <button className="remove-round-btn" onClick={() => removeRound(index)} disabled={isActive || rounds.length <= 1}>&times;</button>
+                <div className="form-group">
+                  <label>Упражнения (через запятую):</label>
+                  <input
+                    type="text"
+                    value={round.exercises.join(', ')}
+                    onChange={(e) => handleRoundChange(index, e.target.value)}
+                    disabled={isActive}
+                  />
+                </div>
+              </div>
+            ))}
+            <button onClick={addRound} disabled={isActive || rounds.length >= maxRounds}>Добавить раунд</button>
+          </div>
+      </div>
     </div>
   );
 }
