@@ -217,14 +217,17 @@ header h1 {
   color: var(--text-secondary-color);
 }
 
-.workout-info h2,
-.timer-display h2 {
-  font-size: 1.8rem;
+.workout-info h2 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin: 0.2rem 0;
 }
 
-.workout-info h3,
-.timer-display h3 {
-    font-size: 1.5rem;
+.workout-info h3 {
+  font-size: 1.5rem;
+  color: var(--text-secondary-color);
+  margin: 0.2rem 0;
 }
 
 .timer-display p {

@@ -29,6 +29,7 @@ function App() {
   const handleTimeChange = (setter, value, delta) => {
     const newValue = value + delta;
     setter(newValue >= 0 ? newValue : 0);
+    setPhaseDuration(newValue >= 0 ? newValue : 0);
   };
 
   const changeTheme = useCallback(() => {
@@ -107,9 +108,25 @@ function App() {
   }, [time, isActive, rounds, currentRound, currentExercise, isResting, isRoundResting, playSound, workTime, restTime, roundRestTime]);
 
   useEffect(() => {
-    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isCurrentlyFullscreen);
+      
+      if (!isCurrentlyFullscreen) {
+        setIsSettingsVisible(true);
+      }
+    };
+    
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const enterFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Не удалось включить полноэкранный режим: ${err.message}`);
+      });
+    }
   }, []);
 
   const handleRoundChange = (index, value) => {
@@ -144,8 +161,21 @@ function App() {
     setPhaseDuration(workTime);
   }
 
+  const requestFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Не удалось включить полноэкранный режим: ${err.message}`);
+      });
+    }
+  }, []);
+
   const toggleTimer = () => {
     initAudio();
+
+    if (!isActive) {
+      enterFullscreen();
+      setIsSettingsVisible(false);
+    }
     if (!isActive && time === 0 && currentRound >= rounds.length -1 && currentExercise >= rounds[currentRound].exercises.length - 1) {
         resetTimer();
     }
