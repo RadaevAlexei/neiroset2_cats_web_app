@@ -50,9 +50,32 @@ body {
   box-sizing: border-box;
 }
 
-.fullscreen-btn {
+.menu-btn {
     position: absolute;
     top: 20px;
+    left: 20px;
+    background: none;
+    border: none;
+    color: var(--text-secondary-color);
+    cursor: pointer;
+    padding: 5px;
+    z-index: 10;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.menu-btn:hover {
+    color: var(--primary-color);
+}
+
+.menu-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+.fullscreen-btn {
+    position: absolute;
+    top: 65px;
     left: 20px;
     background: none;
     border: none;

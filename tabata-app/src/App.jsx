@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import './index.css'
 
+const MenuIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="3" y1="12" x2="21" y2="12"></line>
+    <line x1="3" y1="6" x2="21" y2="6"></line>
+    <line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+);
+
 const FullscreenIcon = ({ isFullscreen }) => {
   if (isFullscreen) {
     // Exit fullscreen icon
@@ -207,35 +215,6 @@ function App() {
 
   return (
     <div className="app">
-      <button onClick={toggleFullscreen} className="fullscreen-btn" title="Полноэкранный режим">
-        <FullscreenIcon isFullscreen={isFullscreen} />
-      </button>
-      
-      <div className="timer-section">
-        <header>
-          <h1>Табата Таймер</h1>
-        </header>
-        <main className="timer-main">
-          <div className="timer-display">
-            <h2>Раунд: {currentRound + 1} / {rounds.length}</h2>
-            <h3>Упражнение: {currentExerciseName}</h3>
-            <div className="main-timer">{time}с</div>
-            <p className={isResting || isRoundResting ? 'resting' : ''}>
-              {isResting ? "ОТДЫХ" : isRoundResting ? "МЕЖРАУНДОВЫЙ ОТДЫХ" : "РАБОТА"}
-            </p>
-          </div>
-
-          <div className="controls">
-            <button onClick={toggleTimer}>
-              {isActive ? 'Пауза' : 'Старт'}
-            </button>
-            <button onClick={resetTimer}>
-              Сброс
-            </button>
-          </div>
-        </main>
-      </div>
-
       <div className="settings-section">
         <div className="settings">
             <h2>Настройки</h2>
@@ -288,6 +267,37 @@ function App() {
             ))}
             <button onClick={addRound} disabled={isActive || rounds.length >= maxRounds}>Добавить раунд</button>
           </div>
+      </div>
+
+      <div className="timer-section">
+        <button onClick={() => {}} className="menu-btn" title="Меню">
+          <MenuIcon />
+        </button>
+        <button onClick={toggleFullscreen} className="fullscreen-btn" title="Полноэкранный режим">
+          <FullscreenIcon isFullscreen={isFullscreen} />
+        </button>
+        <header>
+          <h1>Табата Таймер</h1>
+        </header>
+        <main className="timer-main">
+          <div className="timer-display">
+            <h2>Раунд: {currentRound + 1} / {rounds.length}</h2>
+            <h3>Упражнение: {currentExerciseName}</h3>
+            <div className="main-timer">{time}с</div>
+            <p className={isResting || isRoundResting ? 'resting' : ''}>
+              {isResting ? "ОТДЫХ" : isRoundResting ? "МЕЖРАУНДОВЫЙ ОТДЫХ" : "РАБОТА"}
+            </p>
+          </div>
+
+          <div className="controls">
+            <button onClick={toggleTimer}>
+              {isActive ? 'Пауза' : 'Старт'}
+            </button>
+            <button onClick={resetTimer}>
+              Сброс
+            </button>
+          </div>
+        </main>
       </div>
     </div>
   );
