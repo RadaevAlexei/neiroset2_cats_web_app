@@ -1,6 +1,29 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import './index.css'
 
+const ProgressBar = ({ progress, size, strokeWidth, color }) => {
+  const center = size / 2;
+  const radius = center - strokeWidth / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (progress / 100) * circumference;
+
+  return (
+    <svg className="progress-bar-svg" width={size} height={size}>
+      <circle className="progress-bar-bg" cx={center} cy={center} r={radius} strokeWidth={strokeWidth} />
+      <circle
+        className="progress-bar-fg"
+        cx={center}
+        cy={center}
+        r={radius}
+        strokeWidth={strokeWidth}
+        stroke={color}
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+      />
+    </svg>
+  );
+};
+
 const MenuIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -42,6 +65,8 @@ function App() {
   const [isResting, setIsResting] = useState(false);
   const [isRoundResting, setIsRoundResting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSettingsVisible, setIsSettingsVisible] = useState(true);
+  const [phaseDuration, setPhaseDuration] = useState(workTime);
 
   const maxRounds = 8;
   const audioContextRef = useRef(null);
@@ -110,10 +135,12 @@ function App() {
       if (currentExercise + 1 < rounds[currentRound].exercises.length) {
         setCurrentExercise(currentExercise + 1);
         setTime(workTime);
+        setPhaseDuration(workTime);
       } else { // End of round, start round rest
         playSound('rest');
         setIsRoundResting(true);
         setTime(roundRestTime);
+        setPhaseDuration(roundRestTime);
       }
     } else if (isRoundResting) { // End of rest between rounds
       playSound('work');
@@ -122,6 +149,7 @@ function App() {
         setCurrentRound(currentRound + 1);
         setCurrentExercise(0);
         setTime(workTime);
+        setPhaseDuration(workTime);
       } else { // End of workout
         setIsActive(false);
       }
@@ -130,15 +158,18 @@ function App() {
         playSound('rest');
         setIsResting(true);
         setTime(restTime);
+        setPhaseDuration(restTime);
       } else { // No rest, go to next exercise or round rest
         if (currentExercise + 1 < rounds[currentRound].exercises.length) {
           playSound('work');
           setCurrentExercise(currentExercise + 1);
           setTime(workTime);
+          setPhaseDuration(workTime);
         } else { // End of round, start round rest
           playSound('rest');
           setIsRoundResting(true);
           setTime(roundRestTime);
+          setPhaseDuration(roundRestTime);
         }
       }
     }
@@ -180,6 +211,7 @@ function App() {
     setCurrentRound(0);
     setCurrentExercise(0);
     setTime(workTime);
+    setPhaseDuration(workTime);
   }
 
   const toggleTimer = () => {
@@ -211,11 +243,13 @@ function App() {
     }
   }, []);
 
+  const progress = phaseDuration > 0 ? (time / phaseDuration) * 100 : 0;
+  const progressColor = isResting || isRoundResting ? 'var(--red)' : 'var(--green)';
   const currentExerciseName = isRoundResting ? "Отдых между раундами" : (rounds[currentRound]?.exercises[currentExercise] || "Готово");
 
   return (
     <div className="app">
-      <div className="settings-section">
+      <div className={`settings-section ${!isSettingsVisible ? 'collapsed' : ''}`}>
         <div className="settings">
             <h2>Настройки</h2>
             <div className="global-settings">
@@ -270,7 +304,7 @@ function App() {
       </div>
 
       <div className="timer-section">
-        <button onClick={() => {}} className="menu-btn" title="Меню">
+        <button onClick={() => setIsSettingsVisible(!isSettingsVisible)} className="menu-btn" title="Меню">
           <MenuIcon />
         </button>
         <button onClick={toggleFullscreen} className="fullscreen-btn" title="Полноэкранный режим">
@@ -280,13 +314,29 @@ function App() {
           <h1>Табата Таймер</h1>
         </header>
         <main className="timer-main">
-          <div className="timer-display">
+          <div className="workout-info">
             <h2>Раунд: {currentRound + 1} / {rounds.length}</h2>
             <h3>Упражнение: {currentExerciseName}</h3>
-            <div className="main-timer">{time}с</div>
-            <p className={isResting || isRoundResting ? 'resting' : ''}>
-              {isResting ? "ОТДЫХ" : isRoundResting ? "МЕЖРАУНДОВЫЙ ОТДЫХ" : "РАБОТА"}
-            </p>
+          </div>
+          <div className="timer-display">
+            <ProgressBar progress={progress} size={350} strokeWidth={30} color={progressColor} />
+            <div className="timer-content">
+              <div className="main-timer">{time}</div>
+              <p
+                className={
+                  (isResting || isRoundResting ? 'resting ' : '') +
+                  (isRoundResting ? 'round-rest' : '')
+                }
+              >
+                {isResting
+                  ? "ОТДЫХ"
+                  : isRoundResting
+                  ? <>
+                      МЕЖРАУНДОВЫЙ<br />ОТДЫХ
+                    </>
+                  : "РАБОТА"}
+              </p>
+            </div>
           </div>
 
           <div className="controls">

@@ -48,6 +48,23 @@ body {
   overflow-y: auto;
   height: 100vh;
   box-sizing: border-box;
+  flex-shrink: 0;
+  transition: width 0.4s ease-in-out, padding 0.4s ease-in-out;
+}
+
+.settings-section.collapsed {
+  width: 0;
+  padding: 2rem 0;
+  overflow: hidden;
+}
+
+.settings-section .settings {
+  min-width: calc(450px - 4rem);
+  transition: opacity 0.3s ease;
+}
+
+.settings-section.collapsed .settings {
+  opacity: 0;
 }
 
 .menu-btn {
@@ -110,22 +127,67 @@ header h1 {
 }
 
 .timer-display {
-  margin-bottom: 2rem;
+  position: relative;
+  width: 350px;
+  height: 350px;
+  margin: 0 auto 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.progress-bar-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(-90deg);
+}
+
+.progress-bar-bg, .progress-bar-fg {
+  fill: none;
+}
+
+.progress-bar-bg {
+  stroke: #3e3e3e;
+}
+
+.progress-bar-fg {
+  transition: stroke-dashoffset 0.3s linear, stroke 0.4s ease;
+  stroke-linecap: round;
 }
 
 .main-timer {
-  font-size: 10rem;
+  font-size: 9rem;
   font-weight: bold;
-  margin: 1rem 0;
+  margin: 0;
   line-height: 1;
 }
 
+.workout-info {
+  margin-bottom: 1.5rem;
+}
+
+.workout-info h2, .workout-info h3,
 .timer-display h2, .timer-display h3 {
-  margin: 0.5rem 0;
+  margin: 0.2rem 0;
   color: var(--text-secondary-color);
+}
+
+.workout-info h2,
+.timer-display h2 {
   font-size: 1.8rem;
 }
 
+.workout-info h3,
 .timer-display h3 {
     font-size: 1.5rem;
 }
@@ -134,10 +196,18 @@ header h1 {
     font-size: 2rem;
     font-weight: bold;
     color: var(--green);
+    margin-top: 5px;
+    text-align: center;
+    line-height: 1.15;
 }
 
 .timer-display p.resting {
     color: var(--red);
+}
+
+.timer-display p.round-rest {
+    font-size: 1.3rem;
+    letter-spacing: 0.01em;
 }
 
 .controls button {
