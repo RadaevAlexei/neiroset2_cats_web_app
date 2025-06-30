@@ -1,6 +1,45 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import './index.css'
 
+const themes = [
+  { // Default Dark
+    '--background-color': '#1a1a1a',
+    '--surface-color': '#2c2c2c',
+    '--primary-color': '#00aaff',
+    '--text-color': '#ffffff',
+    '--text-secondary-color': '#b3b3b3',
+    '--red': '#ff4d4d',
+    '--green': '#4dff88',
+  },
+  { // Oceanic Deep
+    '--background-color': '#0B132B',
+    '--surface-color': '#1C2541',
+    '--primary-color': '#3A506B',
+    '--text-color': '#FFFFFF',
+    '--text-secondary-color': '#5BC0BE',
+    '--red': '#F06543',
+    '--green': '#6FFFE9',
+  },
+  { // Forest Whisper
+    '--background-color': '#1E2A22',
+    '--surface-color': '#2A3C2F',
+    '--primary-color': '#A2C29B',
+    '--text-color': '#F0F2EF',
+    '--text-secondary-color': '#C9D8C5',
+    '--red': '#D96C75',
+    '--green': '#84A98C',
+  },
+  { // Crimson Night
+    '--background-color': '#121212',
+    '--surface-color': '#1E1E1E',
+    '--primary-color': '#CF6679',
+    '--text-color': '#E1E1E1',
+    '--text-secondary-color': '#A8A8A8',
+    '--red': '#E57373',
+    '--green': '#03DAC6',
+  }
+];
+
 const ProgressBar = ({ progress, size, strokeWidth, color }) => {
   const center = size / 2;
   const radius = center - strokeWidth / 2;
@@ -49,6 +88,14 @@ const FullscreenIcon = ({ isFullscreen }) => {
   );
 };
 
+const ThemeIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22a7 7 0 0 0 0-14H7a2 2 0 0 0-2 2v2.5a2.5 2.5 0 0 0 2.5 2.5z"></path>
+        <path d="M12 22a7 7 0 0 1 0-14H7a2 2 0 0 1 2-2h3"></path>
+        <path d="M18 16a2 2 0 0 0 2-2v-2"></path>
+    </svg>
+);
+
 function App() {
   const [workTime, setWorkTime] = useState(30);
   const [restTime, setRestTime] = useState(10);
@@ -70,6 +117,11 @@ function App() {
 
   const maxRounds = 8;
   const audioContextRef = useRef(null);
+
+  const handleTimeChange = (setter, value, delta) => {
+    const newValue = value + delta;
+    setter(newValue >= 0 ? newValue : 0);
+  };
 
   const playSound = useCallback((type) => {
     if (!audioContextRef.current) return;
@@ -99,6 +151,14 @@ function App() {
     o.start(context.currentTime);
     g.gain.linearRampToValueAtTime(0, context.currentTime + dur);
     o.stop(context.currentTime + dur);
+  }, []);
+
+  const changeTheme = useCallback(() => {
+    const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+    const root = document.documentElement;
+    Object.keys(randomTheme).forEach(key => {
+      root.style.setProperty(key, randomTheme[key]);
+    });
   }, []);
 
   useEffect(() => {
@@ -256,30 +316,48 @@ function App() {
               <div className="form-group-inline">
                 <div className="form-group">
                   <label>Работа (сек):</label>
-                  <input
-                    type="number"
-                    value={workTime}
-                    onChange={(e) => setWorkTime(parseInt(e.target.value, 10) || 0)}
-                    disabled={isActive}
-                  />
+                  <div className="number-input-container">
+                    <input
+                      type="number"
+                      value={workTime}
+                      onChange={(e) => setWorkTime(parseInt(e.target.value, 10) || 0)}
+                      disabled={isActive}
+                    />
+                    <div className="spinner-controls">
+                        <button className="spinner-btn" onClick={() => handleTimeChange(setWorkTime, workTime, 1)} disabled={isActive}>▲</button>
+                        <button className="spinner-btn" onClick={() => handleTimeChange(setWorkTime, workTime, -1)} disabled={isActive}>▼</button>
+                    </div>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label>Отдых (сек):</label>
-                  <input
-                    type="number"
-                    value={restTime}
-                    onChange={(e) => setRestTime(parseInt(e.target.value, 10) || 0)}
-                    disabled={isActive}
-                  />
+                  <div className="number-input-container">
+                    <input
+                      type="number"
+                      value={restTime}
+                      onChange={(e) => setRestTime(parseInt(e.target.value, 10) || 0)}
+                      disabled={isActive}
+                    />
+                    <div className="spinner-controls">
+                        <button className="spinner-btn" onClick={() => handleTimeChange(setRestTime, restTime, 1)} disabled={isActive}>▲</button>
+                        <button className="spinner-btn" onClick={() => handleTimeChange(setRestTime, restTime, -1)} disabled={isActive}>▼</button>
+                    </div>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label>Отдых между раундами (сек):</label>
-                  <input
-                    type="number"
-                    value={roundRestTime}
-                    onChange={(e) => setRoundRestTime(parseInt(e.target.value, 10) || 0)}
-                    disabled={isActive}
-                  />
+                  <div className="number-input-container">
+                    <input
+                      type="number"
+                      value={roundRestTime}
+                      onChange={(e) => setRoundRestTime(parseInt(e.target.value, 10) || 0)}
+                      disabled={isActive}
+                    />
+                    <div className="spinner-controls">
+                        <button className="spinner-btn" onClick={() => handleTimeChange(setRoundRestTime, roundRestTime, 1)} disabled={isActive}>▲</button>
+                        <button className="spinner-btn" onClick={() => handleTimeChange(setRoundRestTime, roundRestTime, -1)} disabled={isActive}>▼</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -309,6 +387,9 @@ function App() {
         </button>
         <button onClick={toggleFullscreen} className="fullscreen-btn" title="Полноэкранный режим">
           <FullscreenIcon isFullscreen={isFullscreen} />
+        </button>
+        <button onClick={changeTheme} className="theme-btn" title="Сменить тему">
+            <ThemeIcon />
         </button>
         <header>
           <h1>Табата Таймер</h1>
